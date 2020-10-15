@@ -25,7 +25,7 @@ class TokenInfo:
         return infos
 
     @classmethod
-    def is_neighbor(cls, info0, info1, x_tolerance=10, y_tolerance=16):
+    def is_neighbor(cls, info0, info1, x_tolerance=15, y_tolerance=16):
         bbox0 = info0.bbox
         bbox1 = info1.bbox
 
@@ -114,57 +114,61 @@ class DocBankReader:
             basename_list.append(basename)
         self.basename_list = basename_list
                 
-    def load(self, basename_list):
-        examples = []
-        for basename in tqdm(basename_list, desc='Loading data:'):
-            txt_file = basename + '.txt'
-            img_file = basename + '_ori.jpg'
-            
-            words = []
-            bboxes = []
-            rgbs = []
-            fontnames = []
-            structures = []
-            
-            with open(os.path.join(self.txt_dir, txt_file), 'r', encoding='utf8') as fp:
-                for line in fp.readlines():
-                    tts = line.split()
-                    assert len(tts) == 10, 'Incomplete line in file {}'.format(txt_file)
-                    
-                    word = tts[0]
-                    bbox = list(map(int, tts[1:5]))
-                    rgb = list(map(int, tts[5:8]))
-                    fontname = tts[8]
-                    structure = tts[9]
-                    
-                    words.append(word)
-                    bboxes.append(bbox)
-                    rgbs.append(rgb)
-                    fontnames.append(fontname)
-                    structures.append(structure)
-            
-            im = Image.open(os.path.join(self.img_dir, img_file))
-            pagesize = im.size
-            examples.append(Example(
-                filepath = os.path.join(self.img_dir, img_file),
-                pagesize = pagesize,
-                words = words,
-                bboxes = bboxes,
-                rgbs = rgbs,
-                fontnames = fontnames,
-                structures = structures
-            ))
-        return examples
+    def load(self, basename):        
+        txt_file = basename + '.txt'
+        img_file = basename + '_ori.jpg'
+        
+        words = []
+        bboxes = []
+        rgbs = []
+        fontnames = []
+        structures = []
+        
+        with open(os.path.join(self.txt_dir, txt_file), 'r', encoding='utf8') as fp:
+            for line in fp.readlines():
+                tts = line.split()
+                assert len(tts) == 10, 'Incomplete line in file {}'.format(txt_file)
+                
+                word = tts[0]
+                bbox = list(map(int, tts[1:5]))
+                rgb = list(map(int, tts[5:8]))
+                fontname = tts[8]
+                structure = tts[9]
+                
+                words.append(word)
+                bboxes.append(bbox)
+                rgbs.append(rgb)
+                fontnames.append(fontname)
+                structures.append(structure)
+        
+        im = Image.open(os.path.join(self.img_dir, img_file))
+        pagesize = im.size
+        example = Example(
+            filepath = os.path.join(self.img_dir, img_file),
+            pagesize = pagesize,
+            words = words,
+            bboxes = bboxes,
+            rgbs = rgbs,
+            fontnames = fontnames,
+            structures = structures
+        )
+        return example
     
     def read_all(self):
-        return self.load(self.basename_list)
+        examples = []
+        for basename in tqdm(self.basename_list, desc='Loading examples:'):
+            examples.append(self.load(basename))
+        return examples
     
     def sample_n(self, n):
-        return self.load(random.sample(self.basename_list, n))
+        examples = []
+        for basename in tqdm(random.sample(self.basename_list, n), desc='Sampling examples:'):
+            examples.append(self.load(basename))            
+        return examples
 
     def get_by_filename(self, filename):
         basename = filename.replace('.txt', '') if '.txt' in filename else filename.replace('_ori.jpg', '')
-        return self.load([basename])
+        return self.load(basename)
     
         
         
