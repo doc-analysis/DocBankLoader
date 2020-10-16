@@ -1,8 +1,16 @@
 import os
-from tqdm import tqdm
 import random
-from PIL import Image
+
 import numpy as np
+from PIL import Image
+from tqdm import tqdm
+
+from reader import Reader
+import logging
+
+logger = logging.getLogger('__name__')
+
+
 class TokenInfo:
     def __init__(self, word, bbox, rgb, fontname, structure):                
         self.word = word
@@ -100,7 +108,7 @@ class Example:
         
             
 
-class DocBankReader:
+class DocBankReader(Reader):
     def __init__(self, txt_dir, img_dir):
         self.txt_dir = txt_dir
         self.img_dir = img_dir
@@ -112,7 +120,7 @@ class DocBankReader:
 #             if not os.path.exists(os.path.join(self.txt_dir, txt_file)):
 #                 raise NameError('Missing txt file: {}'.format(txt_file))                
             basename_list.append(basename)
-        self.basename_list = basename_list
+        self.basename_list = sorted(basename_list)
                 
     def load(self, basename):        
         txt_file = basename + '.txt'
@@ -127,7 +135,9 @@ class DocBankReader:
         with open(os.path.join(self.txt_dir, txt_file), 'r', encoding='utf8') as fp:
             for line in fp.readlines():
                 tts = line.split()
-                assert len(tts) == 10, 'Incomplete line in file {}'.format(txt_file)
+                if not len(tts) == 10:
+                    logger.warning('Incomplete line in file {}'.format(txt_file))
+                    continue
                 
                 word = tts[0]
                 bbox = list(map(int, tts[1:5]))
@@ -167,7 +177,7 @@ class DocBankReader:
         return examples
 
     def get_by_filename(self, filename):
-        basename = filename.replace('.txt', '') if '.txt' in filename else filename.replace('_ori.jpg', '')
+        basename = filename.replace('.txt', '').replace('_ori.jpg', '')
         return self.load(basename)
     
         

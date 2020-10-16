@@ -8,7 +8,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 
-from DocBankReader import DocBankReader, TokenInfo
+from docbank_reader import DocBankReader, TokenInfo
+from reader import Reader
 
 # random.seed(42)
 np.random.seed(42)
@@ -125,7 +126,7 @@ class SegmentationExample:
         return im
 
 
-class DocBankSegmentationReader:
+class DocBankSegmentationReader(Reader):
     def __init__(self, docbank):
         self.docbank = docbank
         self.basename_list = self.docbank.basename_list
@@ -163,7 +164,7 @@ class DocBankSegmentationReader:
         x_tol_counter = Counter(x_toler)
         y_tol_counter = Counter(y_toler)
 
-        return x_tol_counter, y_tol_counter
+        return x_tol_counter, y_tol_counter        
 
     def sample_n(self, n):
         examples = self.docbank.sample_n(n)
