@@ -11,13 +11,33 @@ from PIL import Image, ImageDraw
 from docbank_reader import DocBankReader, TokenInfo
 from reader import Reader
 
-# random.seed(42)
+random.seed(42)
 np.random.seed(42)
 
 class Bbox:
+    def __init__(self, bbox, structure, pagesize):
+        self.bbox = bbox
+        self.structure = structure
+        self.pagesize = pagesize
+    
+    def __str__(self):
+        return '\t'.join(list(map(str, self.bbox)) + [self.structure])
+
+class NormalizedBbox:
     def __init__(self, bbox, structure):
         self.bbox = bbox
         self.structure = structure
+    
+    def __str__(self):
+        return '\t'.join(list(map(str, self.bbox)) + [self.structure])
+
+    def denormalize(self, pagesize):
+        width, height = pagesize
+        x0, y0, x1, y1 = self.bbox
+        x0, y0, x1, y1 = int(x0 * width / 1000), int(y0 * height / 1000), int(x1 * width / 1000), int(
+            y1 * height / 1000)
+
+        return Bbox([x0, y0, x1, y1], self.structure, pagesize)
 
 class Segmentation:
     def __init__(self, infos, structure):
@@ -30,11 +50,11 @@ class Segmentation:
         rights = [t.bbox[2] for t in self.infos]
         bottoms = [t.bbox[3] for t in self.infos]
 
-        return Bbox((min(lefts), min(tops), max(rights), max(bottoms)), self.structure)
+        return NormalizedBbox((min(lefts), min(tops), max(rights), max(bottoms)), self.structure)
 
     @classmethod
     def from_example(cls, example):
-        infos = TokenInfo.from_example(example)
+        infos = [t for t in TokenInfo.from_example(example) if not (t.word == '##LTLine##' and t.structure == 'paragraph')]
         flags = np.zeros(len(infos), dtype=int)
 
         struct_dict = {}
@@ -125,6 +145,15 @@ class SegmentationExample:
 
         return im
 
+    def print_bbox(self):
+        bboxes = []
+        for nor_bbox in self.bboxes:
+            bbox = nor_bbox.denormalize(self.pagesize)
+            bboxes.append(bbox)
+
+        return '\n'.join(map(str, bboxes))
+
+
 
 class DocBankSegmentationReader(Reader):
     def __init__(self, docbank):
@@ -199,14 +228,16 @@ if __name__ == '__main__':
     docbank_segmentation = DocBankSegmentationReader(docbank)
 
     # examples = docbank.get_by_filename('1.tar_1401.0001.gz_infoingames_without_metric_arxiv_0_ori.jpg')
-    segments = docbank_segmentation.sample_n(1000)
+    segments = docbank_segmentation.sample_n(10)
 
-    # for segment in segments:
+    for example in segments:
 
-    #     # filename = os.path.basename(example.filepath)
-    #     im = segment.plot_bbox()        
+        filename = os.path.basename(example.filepath)
+        with open(os.path.join('output', filename.replace('_ori.jpg', '.txt')), 'w') as fp:
+            fp.write(example.print_bbox())
+        im = example.plot_bbox()        
     #     im.show()
-    #     # im.save(os.path.join(output_dir, filename.replace('_ori.jpg', '_seg.jpg')))
+        im.save(os.path.join(output_dir, filename.replace('_ori.jpg', '_bbox.jpg')))
     #     # im = example.plot()
     #     # im.save(os.path.join(output_dir, filename.replace('_ori.jpg', '_exp.jpg')))
     #     # shutil.copy(os.path.join(img_dir, filename), os.path.join(output_dir, filename))

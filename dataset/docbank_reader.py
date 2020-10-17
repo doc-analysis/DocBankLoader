@@ -25,6 +25,9 @@ class TokenInfo:
                           str(self.rgb),
                           str(self.fontname),
                           str(self.structure)])
+
+    def __repr__(self):
+        return 'TokenInfo({}, {}, {})'.format(self.word, str(self.bbox), self.structure)                          
     @classmethod
     def from_example(cls, example):
         infos = []
