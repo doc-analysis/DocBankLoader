@@ -16,7 +16,7 @@ pip install -U Pillow tqdm
 
 ```
 git clone https://github.com/doc-analysis/DocBankLoader.git
-cd DocBankReader
+cd DocBankLoader
 pip install .
 ```
 
