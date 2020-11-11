@@ -102,7 +102,7 @@ type(example)
 # <docbank_loader.docbank_converter.CVExample>
 
 im = example.plot() # Plot the DocBank annotation and return a PIL.Image.Image
-im = example.plot_bbox() # Plot the Object Detection models' format annotation and return a PIL.Image.Image
+im = example.plot_bbox() # Plot the CV annotation and return a PIL.Image.Image
 print(example.print_bbox()) # Print the bounding boxes and labels
 
 example.filepath # The image filepath
