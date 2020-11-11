@@ -8,8 +8,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 
-from .docbank_reader import DocBankReader, TokenInfo
-from .reader import Reader
+from .docbank_loader import DocBankLoader, TokenInfo
+from .loader import Loader
 
 random.seed(42)
 np.random.seed(42)
@@ -39,7 +39,7 @@ class NormalizedBbox:
 
         return Bbox([x0, y0, x1, y1], self.structure, pagesize)
 
-class Segmentation:
+class CVStructure:
     def __init__(self, infos, structure):
         self.infos = infos
         self.structure = structure
@@ -65,13 +65,13 @@ class Segmentation:
             else:
                 struct_dict[struct] = [(info, info_id)]
 
-        segments = []
+        cv_structures = []
         for struct in struct_dict.keys():
             struct_list = [t for t in struct_dict[struct] if flags[t[1]] == 0]
             while struct_list:
                 this_info, this_info_id = random.choice(struct_list)
 
-                segment_infos = []
+                cv_structure_infos = []
 
                 queue = [this_info]
                 flags[this_info_id] = 1
@@ -82,28 +82,28 @@ class Segmentation:
                         if flags[info_id] == 0 and TokenInfo.is_neighbor(this_info, info):
                             queue.append(info)
                             flags[info_id] = 1
-                    segment_infos.append(queue.pop(0))
+                    cv_structure_infos.append(queue.pop(0))
 
-                segments.append(Segmentation(segment_infos, struct))
+                cv_structures.append(CVStructure(cv_structure_infos, struct))
                 struct_list = [
                     t for t in struct_dict[struct] if flags[t[1]] == 0]
 
-        return segments
+        return cv_structures
 
 
-class SegmentationExample:
-    def __init__(self, example, segments):
+class CVExample:
+    def __init__(self, example, cv_structures):
         self.filepath = example.filepath
         self.pagesize = example.pagesize
-        self.segments = segments
+        self.cv_structures = cv_structures
         self._bboxes = None
 
     @property
     def bboxes(self):
         if not self._bboxes:            
             bboxes = []
-            for segment in self.segments:
-                bboxes.append(segment.to_bbox())
+            for cv_structure in self.cv_structures:
+                bboxes.append(cv_structure.to_bbox())
             self._bboxes = bboxes
         return self._bboxes
 
@@ -112,9 +112,9 @@ class SegmentationExample:
         width, height = self.pagesize
         im = np.zeros(list(self.pagesize) + [3], dtype=np.uint8)
 
-        for segment in self.segments:
+        for cv_structure in self.cv_structures:
             color = np.random.randint(256, size=3)
-            for info in segment.infos:
+            for info in cv_structure.infos:
 
                 x0, y0, x1, y1 = info.bbox
                 x0, y0, x1, y1 = int(x0 * width / 1000), int(y0 * height / 1000), int(x1 * width / 1000), int(
@@ -156,7 +156,7 @@ class SegmentationExample:
 
 
 
-class DocBankSegmentationReader(Reader):
+class DocBankConverter(Loader):
     def __init__(self, docbank):
         self.docbank = docbank
         self.basename_list = self.docbank.basename_list
@@ -198,23 +198,23 @@ class DocBankSegmentationReader(Reader):
 
     def sample_n(self, n):
         examples = self.docbank.sample_n(n)
-        segment_examples = []
+        cv_examples = []
         for example in tqdm(examples, desc='Converting:'):
-            segments = Segmentation.from_example(example)
-            segment_examples.append(SegmentationExample(example, segments))
-        return segment_examples
+            cv_structures = CVStructure.from_example(example)
+            cv_examples.append(CVExample(example, cv_structures))
+        return cv_examples
 
     def read_all(self):
         examples = self.docbank.read_all()
-        segment_examples = []
+        cv_examples = []
         for example in tqdm(examples, desc='Converting:'):
-            segments = Segmentation.from_example(example)
-            segment_examples.append(SegmentationExample(example, segments))
-        return segment_examples
+            cv_structures = CVStructure.from_example(example)
+            cv_examples.append(CVExample(example, cv_structures))
+        return cv_examples
 
     def get_by_filename(self, filename):
         example = self.docbank.get_by_filename(filename)
-        segments = Segmentation.from_example(example)
-        segment_example = SegmentationExample(example, segments)
+        cv_structures = CVStructure.from_example(example)
+        segment_example = CVExample(example, cv_structures)
         return segment_example
 

@@ -1,5 +1,5 @@
-# DocBank Reader
+# DocBank Loader
 
-This is a dataset reader for DocBank.
+DocBank Loader is a dataset loader for DocBank.
 
-The official GitHub repositoriy is [https://github.com/doc-analysis/DocBank](https://github.com/doc-analysis/DocBank)
+The official DocBank GitHub repositoriy is [https://github.com/doc-analysis/DocBank](https://github.com/doc-analysis/DocBank)

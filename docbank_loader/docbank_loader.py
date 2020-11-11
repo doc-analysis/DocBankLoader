@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from .reader import Reader
+from .loader import Loader
 import logging
 
 logger = logging.getLogger('__name__')
@@ -121,7 +121,7 @@ class Example:
         
             
 
-class DocBankReader(Reader):
+class DocBankLoader(Loader):
     def __init__(self, txt_dir, img_dir):
         self.txt_dir = txt_dir
         self.img_dir = img_dir

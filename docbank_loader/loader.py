@@ -1,4 +1,4 @@
-class Reader:
+class Loader:
     # def load(self, basename):        
     #     pass
     
