@@ -2,7 +2,7 @@
 
 DocBank Loader is a dataset loader for DocBank, and can convert DocBank to the Object Detection models' format.
 
-The official DocBank GitHub repositoriy is [https://github.com/doc-analysis/DocBank](https://github.com/doc-analysis/DocBank)
+The DocBank GitHub repositoriy is [https://github.com/doc-analysis/DocBank](https://github.com/doc-analysis/DocBank)
 
 ## Usage
 
