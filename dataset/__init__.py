@@ -1,1 +1,0 @@
-from .DocBank_reader import DocBank_reader, Example

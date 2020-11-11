@@ -8,8 +8,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 
-from docbank_reader import DocBankReader, TokenInfo
-from reader import Reader
+from .docbank_reader import DocBankReader, TokenInfo
+from .reader import Reader
 
 random.seed(42)
 np.random.seed(42)
@@ -54,7 +54,7 @@ class Segmentation:
 
     @classmethod
     def from_example(cls, example):
-        infos = [t for t in TokenInfo.from_example(example) if not (t.word == '##LTLine##' and t.structure == 'paragraph')]
+        infos = [t for t in TokenInfo.from_example(example)]
         flags = np.zeros(len(infos), dtype=int)
 
         struct_dict = {}
@@ -141,6 +141,7 @@ class SegmentationExample:
             x0, y0, x1, y1 = int(x0 * width / 1000), int(y0 * height / 1000), int(x1 * width / 1000), int(
                 y1 * height / 1000)
 
+            drawer.text([max(x0-drawer.textsize(bbox.structure)[0], 0), y0], bbox.structure, fill=color)
             drawer.rectangle([x0, y0, x1, y1], outline=color)
 
         return im
@@ -217,27 +218,3 @@ class DocBankSegmentationReader(Reader):
         segment_example = SegmentationExample(example, segments)
         return segment_example
 
-if __name__ == '__main__':
-    txt_dir = r'E:\users\minghaoli\DocBank\DocBank_500K_txt'
-    img_dir = r'E:\users\minghaoli\DocBank\DocBank_500K_ori_img'
-    output_dir = 'output'
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-
-    docbank = DocBankReader(txt_dir=txt_dir, img_dir=img_dir)
-    docbank_segmentation = DocBankSegmentationReader(docbank)
-
-    # examples = docbank.get_by_filename('1.tar_1401.0001.gz_infoingames_without_metric_arxiv_0_ori.jpg')
-    segments = docbank_segmentation.sample_n(10)
-
-    for example in segments:
-
-        filename = os.path.basename(example.filepath)
-        with open(os.path.join('output', filename.replace('_ori.jpg', '.txt')), 'w') as fp:
-            fp.write(example.print_bbox())
-        im = example.plot_bbox()        
-    #     im.show()
-        im.save(os.path.join(output_dir, filename.replace('_ori.jpg', '_bbox.jpg')))
-    #     # im = example.plot()
-    #     # im.save(os.path.join(output_dir, filename.replace('_ori.jpg', '_exp.jpg')))
-    #     # shutil.copy(os.path.join(img_dir, filename), os.path.join(output_dir, filename))

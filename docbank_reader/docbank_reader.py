@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from tqdm import tqdm
 
-from reader import Reader
+from .reader import Reader
 import logging
 
 logger = logging.getLogger('__name__')
@@ -108,6 +108,16 @@ class Example:
         im = Image.fromarray(im, mode='RGB')
 
         return im
+
+    def denormalized_bboxes(self):
+        re = []
+        width, height = self.pagesize
+        for bbox in self.bboxes:
+            deno_bbox = [bbox[0]/1000*width, bbox[1]/1000*height, bbox[2]/1000*width, bbox[3]/1000*height]
+            deno_bbox = list(map(int, deno_bbox))
+            re.append(deno_bbox)
+
+        return re
         
             
 
@@ -183,5 +193,11 @@ class DocBankReader(Reader):
         basename = filename.replace('.txt', '').replace('_ori.jpg', '')
         return self.load(basename)
     
-        
-        
+    def read_by_index(self, index_path):
+        examples = []
+        with open(index_path, 'r') as fp:
+            for txt_file in tqdm(fp.readlines(), desc='Loading examples:'):
+                txt_file = txt_file.rstrip()
+                examples.append(self.get_by_filename(txt_file))
+        return examples
+    

@@ -1,6 +1,6 @@
-from docbank_reader import DocBankReader
-from docbank_seg_reader import DocBankSegmentationReader
-from reader import Reader
+from .docbank_reader import DocBankReader
+from .docbank_seg_reader import DocBankSegmentationReader
+from .reader import Reader
 
 from tqdm import tqdm
 import h5py
@@ -89,18 +89,3 @@ class DocBankCache:
                 caches.append(cache)
         return caches
 
-if __name__ == '__main__':
-    txt_dir = r'E:\users\minghaoli\DocBank\DocBank_500K_txt'
-    img_dir = r'E:\users\minghaoli\DocBank\DocBank_500K_ori_img'
-
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(name)s -   %(message)s',
-                    datefmt='%m/%d/%Y %H:%M:%S',
-                    level=logging.INFO)
-
-    docbank = DocBankReader(txt_dir=txt_dir, img_dir=img_dir)
-    docbank_segmentation = DocBankSegmentationReader(docbank)
-
-    docbank_cache = DocBankCache(docbank_segmentation, 'output')
-    docbank_cache.dump_to_bbox()
-    # caches = docbank_cache.load('test.hdf5')
-    # print(caches)
