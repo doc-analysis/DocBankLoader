@@ -2,7 +2,7 @@ import os
 import random
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 from tqdm import tqdm
 
 from .loader import Loader
@@ -106,6 +106,22 @@ class Example:
 
         im = np.swapaxes(im, 0, 1)
         im = Image.fromarray(im, mode='RGB')
+
+        return im
+
+    def plot_bbox(self):
+        width, height = self.pagesize
+        im = Image.open(self.filepath)
+        drawer = ImageDraw.Draw(im)
+
+        for info in self.infos:
+            color = tuple(np.random.randint(256, size=3))
+
+            x0, y0, x1, y1 = info.bbox
+            x0, y0, x1, y1 = int(x0 * width / 1000), int(y0 * height / 1000), int(x1 * width / 1000), int(
+                y1 * height / 1000)
+
+            drawer.rectangle([x0, y0, x1, y1], outline=color)
 
         return im
 
