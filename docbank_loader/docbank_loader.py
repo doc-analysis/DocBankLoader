@@ -163,7 +163,7 @@ class DocBankLoader(Loader):
         
         with open(os.path.join(self.txt_dir, txt_file), 'r', encoding='utf8') as fp:
             for line in fp.readlines():
-                tts = line.split()
+                tts = line.split('\t')
                 if not len(tts) == 10:
                     logger.warning('Incomplete line in file {}'.format(txt_file))
                     continue
